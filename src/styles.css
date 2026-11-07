@@ -10149,3 +10149,73 @@ body.is-locked {
     transition: none;
   }
 }
+
+/* ─── LUMIÈRE: fanart.tv character art ─────────────────────────────────────
+ * The character layer the CharacterArt component renders inside the home
+ * hero (.hero) and the detail hero (.detail-hero): a lineup of character
+ * cutouts standing along the bottom of the artwork — bottom-anchored,
+ * staggered heights from lib/fanart.ts, each tucking behind the previous —
+ * over the backdrop, under the copy. Absent entirely when a title has no
+ * character art, so nothing here changes the stock heroes.
+ */
+.lumiere-character-art {
+  position: absolute;
+  right: 1.5%;
+  bottom: 0;
+  height: 94%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  pointer-events: none;
+  z-index: 1;
+}
+.lumiere-character-art img {
+  position: relative;
+  width: auto;
+  /* A wide group cutout must not swallow the hero; a standing figure is
+     tall, so height rules and width only caps. */
+  max-width: 36vw;
+  object-fit: contain;
+  object-position: bottom center;
+  filter: drop-shadow(0 12px 22px rgba(0, 0, 0, 0.55));
+  animation: lumiere-character-in 0.7s ease both;
+}
+@keyframes lumiere-character-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* The copy stays above the lineup it shares the hero with. */
+.hero .hero-copy {
+  position: relative;
+  z-index: 2;
+}
+.detail-hero .detail-copy {
+  position: relative;
+  z-index: 2;
+}
+/* The detail hero is taller and its copy runs down the left; the lineup
+   stands a touch shorter so it reads as figures on the backdrop, not a
+   second focal point competing with the logo and actions. */
+.detail-hero .lumiere-character-art {
+  height: 80%;
+}
+@media (max-width: 760px) {
+  .lumiere-character-art {
+    height: 56%;
+    right: 0;
+  }
+  .detail-hero .lumiere-character-art {
+    height: 44%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lumiere-character-art img {
+    animation: none;
+  }
+}
