@@ -6,6 +6,7 @@ import {
   describeCollectionSources,
   loadCollectionSources,
 } from "../lib/addons";
+import { folderFocusGifUrl, folderTileImageSrc } from "../lib/folderArt";
 import type { WatchIndex } from "../lib/progress";
 import { useDragScroll } from "../lib/useDragScroll";
 import { useProgressiveList } from "../lib/useProgressiveList";
@@ -28,6 +29,76 @@ function normalizedShape(shape?: string): "poster" | "landscape" | "square" {
   return "poster";
 }
 
+/**
+ * One folder tile. LUMIÈRE: a folder with a focus GIF swaps its static cover
+ * for the GIF while the tile is focused (TV remote navigation lands DOM
+ * focus on the button) or hovered, and back when focus/hover leaves — the
+ * animated artwork the account data already carries and the stock client
+ * never used. The GIF preloads shortly after first render so the swap is
+ * instant without every tile paying for its GIF up front; a GIF that fails
+ * to load, in the preload or in place, retires the swap for that tile and
+ * the cover stays, silently.
+ */
+function FolderTile({
+  folder,
+  onOpenFolder,
+}: {
+  folder: CollectionFolder;
+  onOpenFolder(folder: CollectionFolder): void;
+}) {
+  const [active, setActive] = useState(false);
+  const [gifFailed, setGifFailed] = useState(false);
+  const gifUrl = folderFocusGifUrl(folder);
+
+  useEffect(() => {
+    if (!gifUrl) return;
+    let live = true;
+    const timer = window.setTimeout(() => {
+      const probe = new Image();
+      probe.onerror = () => {
+        if (live) setGifFailed(true);
+      };
+      probe.src = gifUrl;
+    }, 450);
+    return () => {
+      live = false;
+      window.clearTimeout(timer);
+    };
+  }, [gifUrl]);
+
+  const src = folderTileImageSrc(folder, { active, gifFailed });
+  return (
+    <button
+      className={`folder-tile shape-${normalizedShape(folder.tileShape)}`}
+      onClick={() => onOpenFolder(folder)}
+      onFocus={() => setActive(true)}
+      onBlur={() => setActive(false)}
+      onMouseEnter={() => setActive(true)}
+      onMouseLeave={() => setActive(false)}
+    >
+      <span className="folder-art">
+        {src ? (
+          <img
+            src={src}
+            alt=""
+            loading="lazy"
+            onError={
+              gifUrl && src === gifUrl ? () => setGifFailed(true) : undefined
+            }
+          />
+        ) : (
+          <span className="folder-emoji">{folder.coverEmoji || "★"}</span>
+        )}
+      </span>
+      {!folder.hideTitle && <strong>{folder.title}</strong>}
+      <small>
+        {folder.catalogSources.length} catalog
+        {folder.catalogSources.length === 1 ? "" : "s"}
+      </small>
+    </button>
+  );
+}
+
 /** A collection as a row of folder tiles, the way Nuvio shows them on home. */
 export function CollectionRow({
   collection,
@@ -48,24 +119,7 @@ export function CollectionRow({
       </header>
       <div className="media-row folder-row" ref={rowRef}>
         {collection.folders.map((folder) => (
-          <button
-            key={folder.id}
-            className={`folder-tile shape-${normalizedShape(folder.tileShape)}`}
-            onClick={() => onOpenFolder(folder)}
-          >
-            <span className="folder-art">
-              {folder.coverImageUrl ? (
-                <img src={folder.coverImageUrl} alt="" loading="lazy" />
-              ) : (
-                <span className="folder-emoji">{folder.coverEmoji || "★"}</span>
-              )}
-            </span>
-            {!folder.hideTitle && <strong>{folder.title}</strong>}
-            <small>
-              {folder.catalogSources.length} catalog
-              {folder.catalogSources.length === 1 ? "" : "s"}
-            </small>
-          </button>
+          <FolderTile key={folder.id} folder={folder} onOpenFolder={onOpenFolder} />
         ))}
       </div>
     </section>
