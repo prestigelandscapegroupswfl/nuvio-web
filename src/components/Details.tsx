@@ -34,6 +34,7 @@ import { safeHttpUrl } from "../lib/security";
 import { useDescriptionOverflow } from "../lib/useDescriptionOverflow";
 import { DetailsTrace, detailsDebugEnabled, timed, type TimingStatus } from "../lib/detailsDebug";
 import { DetailsDebugPanel } from "./DetailsDebug";
+import { CharacterArt } from "./CharacterArt";
 import {
   enrichMetadata,
   loadSeasonCast,
@@ -1347,6 +1348,7 @@ export function Details({
               </div>
             )}
         </div>
+        <CharacterArt item={meta} />
       </div>
       <div className="detail-sections">
       {((sectionEnabled("PRODUCTION") &&

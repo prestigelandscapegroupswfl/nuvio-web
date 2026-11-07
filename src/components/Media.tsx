@@ -8,6 +8,7 @@ import {
   useState,
   type CSSProperties,
 } from "react";
+import { CharacterArt } from "./CharacterArt";
 import { posterCandidates } from "../lib/posterFallback";
 import { watchKey, type WatchIndex } from "../lib/progress";
 import { useDragScroll } from "../lib/useDragScroll";
@@ -254,6 +255,7 @@ export function Hero({
                   : undefined
               }
             >
+              <CharacterArt item={item} active={item === active} />
               <div className="hero-copy">
                 {item.logo ? (
                   <img src={item.logo} className="title-logo" alt={item.name} />
