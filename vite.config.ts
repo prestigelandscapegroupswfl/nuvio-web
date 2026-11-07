@@ -92,9 +92,9 @@ export default defineConfig(({ mode }) => {
           "nuvio-wordmark.png",
         ],
         manifest: {
-          name: "Nuvio Web",
-          short_name: "Nuvio",
-          description: "Browse Nuvio catalogs and play browser-compatible streams.",
+          name: "LUMIÈRE",
+          short_name: "LUMIÈRE",
+          description: "Browse catalogs and play browser-compatible streams — with Kodi-style character art.",
           theme_color: "#080a0d",
           background_color: "#080a0d",
           display: "standalone",
