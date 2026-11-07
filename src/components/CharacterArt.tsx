@@ -5,11 +5,12 @@ import { characterStripLayout, fetchCharacterArt } from "../lib/fanart";
 /**
  * LUMIÈRE — the character layer.
  *
- * Stands a title's fanart.tv character cutouts along the bottom of a hero:
+ * Stands a title's character cutouts along the bottom of a hero:
  * bottom-anchored, staggered heights, each tucking behind the last, over
  * the backdrop and under the copy. Renders nothing at all when the title
- * has no character art (most don't), when no fanart key is configured, or
- * when the lookup fails — the hero is then exactly the stock one.
+ * has no character art (most don't) or when the lookup fails — the hero
+ * is then exactly the stock one. (Sources: movies resolve from the hosted
+ * character pack via fanart.ts; no key is involved.)
  *
  * `active` gates the fetch, not the display: the home carousel mounts every
  * slide up front, and only the slide actually being featured should spend a
