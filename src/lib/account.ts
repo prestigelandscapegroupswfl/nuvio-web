@@ -902,6 +902,13 @@ export async function loadCollections(
             coverImageUrl: folder.coverImageUrl
               ? String(folder.coverImageUrl)
               : undefined,
+            // Carried through for LUMIÈRE's focus-GIF tile swap; other
+            // clients write these, and dropping them here left the web
+            // client showing the static cover forever.
+            focusGifUrl: folder.focusGifUrl
+              ? String(folder.focusGifUrl)
+              : undefined,
+            focusGifEnabled: !!folder.focusGifEnabled,
             coverEmoji: folder.coverEmoji
               ? String(folder.coverEmoji)
               : undefined,
