@@ -1,32 +1,46 @@
 import type { Meta } from "../types";
+import { fetchPackCharacterArt } from "./characterpack.ts";
 
 /**
- * LUMIÈRE — Kodi-style character art, supplied by fanart.tv.
+ * LUMIÈRE — Kodi-style character art for the hero.
  *
- * The stock client has no slot for fanart.tv's "characterart" artwork type:
- * AIOMetadata only ever fills poster / background / logo. This module is the
- * whole of the fork's supply side — given a movie's Meta it resolves the id
- * fanart.tv expects, fetches the title once per session, and hands the
- * best-liked character cutouts to the CharacterArt component. Everything
- * degrades silently: no key, no id, no character art, or a failed request
- * all mean "render nothing extra", which is the stock behaviour.
+ * The stock client has no slot for "characterart" artwork: AIOMetadata only
+ * ever fills poster / background / logo. This module is the fork's dispatch
+ * side — given a title's Meta it picks the source that can actually serve
+ * it and hands the cutouts to the CharacterArt component. Everything
+ * degrades silently: no match, no key, or a failed request all mean
+ * "render nothing extra", which is the stock behaviour.
  *
- * Movies only. fanart.tv's TV endpoint keys on TVDB ids, which a Meta does
- * not carry, so series return nothing rather than guessing an id.
+ * SOURCES, in precedence order:
+ *
+ * 1. **Movies → the hosted character pack** (src/lib/characterpack.ts):
+ *    Jay's own Kodi character-art library, matched by title + year. This
+ *    is the ONLY movie source — fanart.tv's API is a dead end for movies:
+ *    verified live on Nov 7, 2026, its v3 movie payloads carry no
+ *    `characterart` field at all (that art type is API-served for TV
+ *    shows only), so there is deliberately no API fallback for movies.
+ * 2. **Series → the fanart.tv API path below**, retained for future use.
+ *    Today it resolves nothing: fanart.tv's TV endpoint keys on TVDB ids,
+ *    which a Meta does not carry, so `fanartIdForMeta` returns undefined
+ *    and the lookup stops before any request. Wiring series up is a
+ *    matter of resolving a TVDB id first (TMDB's `/tv/{id}/external_ids`
+ *    during enrichment) — the fetch/selection code is already here.
  */
 
 // ─── Configuration — the ONE place the fanart.tv key lives ────────────────
 //
 // Set VITE_FANART_API_KEY in .env.local (or the deploy environment) at build
 // time. The fallback constant below exists so the key can also be baked in
-// by editing exactly one line — leave it EMPTY in the tree. With no key the
-// feature disables itself: no request is ever made.
+// by editing exactly one line — leave it EMPTY in the tree. The key gates
+// the fanart.tv API path only (series, future use): with no key that path
+// never makes a request. Movie character art needs no key at all — it comes
+// from the hosted pack (see characterpack.ts).
 const FANART_API_KEY_FALLBACK = "";
 
 export const FANART_API_KEY: string =
   import.meta.env?.VITE_FANART_API_KEY || FANART_API_KEY_FALLBACK;
 
-/** True only when a key is configured; the feature is inert without one. */
+/** True only when a fanart.tv key is configured; the API path is inert without one. */
 export const characterArtEnabled = FANART_API_KEY.trim().length > 0;
 
 /** Most characters ever stood up in a hero at once. */
@@ -68,7 +82,9 @@ export function characterStripLayout(count: number): CharacterSlot[] {
  * the Meta carries one (`tmdb:299536`, or a bare numeric id), else its IMDb
  * id (`tt…`) — the endpoint accepts either. Mirrors the id handling in
  * metadataEnrichment.ts. Undefined when the title is not a movie or carries
- * neither id, in which case there is nothing to look up.
+ * neither id, in which case there is nothing to look up. Retained for the
+ * fanart API path (future series support); movies no longer route here —
+ * they resolve from the character pack instead.
  */
 export function fanartIdForMeta(
   meta: Pick<Meta, "id" | "type">,
@@ -135,8 +151,22 @@ async function requestCharacterArt(id: string): Promise<string[]> {
 /**
  * The character cutout URLs for a title, best first — or an empty array for
  * anything at all that goes wrong or simply has none. Cached per session.
+ *
+ * Dispatch, by precedence (see the module header): a MOVIE resolves from
+ * the hosted character pack, matched by title + year — the pack is the
+ * only movie source, and no fanart key is needed for it. Anything else
+ * takes the fanart.tv API path below, which is gated on a configured key
+ * and, today, stops at id resolution: a Meta carries no TVDB id, so
+ * series resolve to nothing rather than guessing.
  */
-export function fetchCharacterArt(meta: Pick<Meta, "id" | "type">): Promise<string[]> {
+export function fetchCharacterArt(
+  meta: Pick<Meta, "id" | "type" | "name" | "releaseInfo" | "released"> & {
+    year?: number | string;
+  },
+): Promise<string[]> {
+  if (meta.type === "movie") {
+    return fetchPackCharacterArt(meta, MAX_CHARACTER_ART);
+  }
   if (!characterArtEnabled) return Promise.resolve([]);
   const id = fanartIdForMeta(meta);
   if (!id) return Promise.resolve([]);
