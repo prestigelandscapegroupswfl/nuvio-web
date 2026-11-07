@@ -38,6 +38,7 @@ jobs:
           NUVIO_SUPABASE_URL: ${{ secrets.NUVIO_SUPABASE_URL }}
           NUVIO_SUPABASE_FALLBACK_URL: ${{ secrets.NUVIO_SUPABASE_FALLBACK_URL }}
           NUVIO_SUPABASE_ANON_KEY: ${{ secrets.NUVIO_SUPABASE_ANON_KEY }}
+          VITE_FANART_API_KEY: ${{ secrets.VITE_FANART_API_KEY }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
