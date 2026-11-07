@@ -337,6 +337,9 @@ export type CollectionFolder = {
   id: string;
   title: string;
   coverImageUrl?: string;
+  /** LUMIÈRE: animated artwork swapped in while the tile is focused/hovered. */
+  focusGifUrl?: string;
+  focusGifEnabled?: boolean;
   coverEmoji?: string;
   tileShape?: string;
   hideTitle?: boolean;
